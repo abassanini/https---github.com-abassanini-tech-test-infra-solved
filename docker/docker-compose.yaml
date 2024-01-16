@@ -1,0 +1,26 @@
+name:
+  clock
+
+services:
+  clock-app:
+    image: clock-app:v0.4
+    ports:
+      - 127.0.0.1:8000:8000
+    environment:
+      UVICORN_PORT: 8000
+      UVICORN_HOST: 0.0.0.0
+    healthcheck:
+      test: python -c "import socket;exit(0) if 0 == socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect_ex(('127.0.0.1',8000)) else exit(2)"
+      interval: 5s
+      timeout: 10s
+
+  clock-web:
+    image: nginx
+    volumes:
+      - ./clock_web/html:/usr/share/nginx/html:ro
+      - ./clock_web/conf/default.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - 0.0.0.0:80:80
+    depends_on:
+      app:
+        condition: service_healthy

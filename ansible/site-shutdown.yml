@@ -1,0 +1,5 @@
+---
+# file: site-shutdown.yml
+
+- import_playbook: bootstrap.yml
+- import_playbook: docker-stop.yml

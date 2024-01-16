@@ -1,0 +1,11 @@
+---
+# nonsensitive data
+app_user: "{{ lookup('env','APP_USER') }}"
+app_port: "{{ lookup('env','APP_PORT') }}"
+web_port: "{{ lookup('env','WEB_PORT') }}"
+target_ip: "{{ lookup('env','TARGET_IP') }}"
+allow_world_readable_tmpfiles: true
+
+# sensitive data
+# Defined here to keep track of vault content
+rsa_key: "{{ private_key_content }}"

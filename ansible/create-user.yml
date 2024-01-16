@@ -1,0 +1,17 @@
+---
+- name: Create app user
+  hosts: immfly-debian10
+
+  tasks:
+    - name: Create "docker" group
+      ansible.builtin.group:
+        name: docker
+        state: present
+
+    - name: Add application user "{{ app_user }}"
+      ansible.builtin.user:
+        name: "{{ app_user }}"
+        comment: Application User
+        groups: docker
+        append: yes
+

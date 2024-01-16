@@ -1,0 +1,5 @@
+.vault.pass
+venv
+debug.*
+.vscode
+.DS_Store

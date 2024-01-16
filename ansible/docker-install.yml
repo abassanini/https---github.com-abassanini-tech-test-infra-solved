@@ -1,0 +1,52 @@
+---
+- name: Install Docker Engine
+  gather_facts: false
+  hosts: immfly-debian10
+
+  tasks:
+    - name: Install aptitude
+      apt:
+        name: aptitude
+        state: latest
+        update_cache: true
+
+    - name: Install system packages for Docker
+      apt:
+        pkg:
+          - ca-certificates
+          - curl
+          - gnupg
+        state: latest
+        update_cache: true
+
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/debian buster stable
+        state: present
+
+    - name: Install docker-ce and related packages
+      apt:
+        pkg:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin 
+          - docker-compose-plugin
+          - python3-requests
+          - python3-docker
+        state: latest
+        update_cache: true
+
+    - name: Copy docker-compose binary
+      copy:
+        remote_src: true
+        src: /usr/libexec/docker/cli-plugins/docker-compose
+        dest: /usr/bin/
+        owner: root
+        group: root
+        mode: '0755'
