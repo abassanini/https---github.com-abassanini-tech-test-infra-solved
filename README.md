@@ -179,7 +179,7 @@ rm -f debian10-ssh.img
 - See you! 👋🏻
 
 ## Caveats
-- No `ssh-agent` was needed because the private key `rsa` does not have a passphrase and to avoid the exposing the private key in the git repository, it was encrypted using `ansible-vault`
+- No `ssh-agent` was needed because the private key `rsa` does not have a passphrase and to avoid exposing the private key in the git repository, it was encrypted using `ansible-vault`
 - It would be better to use `docker-compose` to control the deployment of the containers as a unit, but it's currently broken with ansible.  A `docker-compose.yml` file is provided for a future use
 - For testing purposes it may be better to use a `qcow2` disk in the VM.  It allows disk snapshots and reverts
 ```sh
