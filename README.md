@@ -2,7 +2,7 @@
 This is the solution repo for the test provided [here](https://github.com/immfly/tech-test-infra)
 
 ## TL;DR
-After the `git clone`,  `cd` into the project `dir` and:
+After the `git clone`,  `cd` into the project dir and:
 ```sh
 bash service-run.sh 
 ```
