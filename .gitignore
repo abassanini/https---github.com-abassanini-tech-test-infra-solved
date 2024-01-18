@@ -1,5 +1,5 @@
 .vault.pass
 venv
-debug.*
+debug*
 .vscode
 .DS_Store

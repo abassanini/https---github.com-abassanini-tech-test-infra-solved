@@ -33,7 +33,7 @@
 
         - name: Wait for clock_app to accept connections on port {{ app_port | int}}
           wait_for:
-            host: "{{ app_output.container.NetworkSettings.Networks.clock_net.IPAddress }}"
+            host: "{{target_ip}}"
             port: "{{ app_port | int }}"
             state: started
             connect_timeout: 1
@@ -60,7 +60,7 @@
 
         - name: Wait for clock_web to accept connections on port {{ web_port | int }}
           wait_for:
-            host: "{{ web_output.container.NetworkSettings.Networks.clock_net.IPAddress }}"
+            host: "{{target_ip}}"
             port: "{{ web_port | int }}"
             state: started
             connect_timeout: 1
@@ -85,3 +85,4 @@
           - "#########################################################"
           - "##  Service available at http://{{ target_ip }}:{{ web_port | int }}/  ##"
           - "#########################################################"
+      when: web_running is success

@@ -6,7 +6,7 @@ After the `git clone`,  `cd` into the project dir and:
 ```sh
 bash service-run.sh 
 ```
-> `sh service-run.sh` should run as well
+> `sh service-run.sh` will fail because of the bash syntax used
 
 ## Assets provided
 - `vm.xml`: Virtual machine XML definition for `libvirt`
@@ -128,6 +128,8 @@ Use one of them to get the VM IP address.  It's needed to run the main `service-
 ├── service-run.sh
 ├── service-stop.sh
 └── utils
+    ├── common.sh
+    ├── env.sh
     └── virsh-ip.sh
 ```
 
@@ -157,13 +159,14 @@ Finally, it will run `ansible` using `docker`, and execute the necessary steps (
 ```sh
 bash service-run.sh
 ```
-> `sh service-run.sh` should run as well
+> `sh service-run.sh` will fail because of the bash syntax used
 
 ## Stopping the containers
 There's a stop shell script called `service-stop.sh`.  It bootstraps ansible container again and connects to the VM to stop and remove the docker containers and docker networks.
 ```sh
-sh service-stop.sh
+bash service-stop.sh
 ```
+> `sh service-stop.sh` will fail because of the bash syntax used
 
 ## Cleaning Up 💣
 - Stop the containers (previous section)
