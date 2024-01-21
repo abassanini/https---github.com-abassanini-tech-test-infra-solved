@@ -4,7 +4,7 @@ This is the solution repo for the test provided [here](https://github.com/immfly
 ## TL;DR
 After the `git clone`,  `cd` into the project dir and:
 ```sh
-bash service-run.sh 
+bash main.sh 
 ```
 > `sh service-run.sh` will fail because of the bash syntax used
 
@@ -70,7 +70,7 @@ tar xf debian10-ssh.img.tar.xz
 ```
 virsh define assets/vm.xml
 ```
-> The main shell script `service-run.sh` will try to guess the target ip address.  If the VM is running on a remote host, the discovery will not be possible.  In this scenario, please configure the VM IP in the `$TARGET_IP` shell variable.  Further instructions in the following sections
+> The main shell script `main.sh` will try to guess the target ip address.  If the VM is running on a remote host, the discovery will not be possible.  In this scenario, please configure the VM IP in the `$TARGET_IP` shell variable or as execution option (-t).  Further instructions in the following sections
 - Start the VM
 ```
 virsh start immfly-debian10
@@ -87,32 +87,26 @@ virsh domifaddr immfly-debian10
 ```
 virsh net-dhcp-leases default
 ```
-Use one of them to get the VM IP address.  It's needed to run the main `service-run.sh` script 
+Use one of them to get the VM IP address.  It's needed to run the main `main.sh` script 
 
 ## Directory Structure Example
 ```sh
 ❯ tree -La 3
 .
-├── .gitignore
 ├── README.md
 ├── ansible
 │   ├── .vault.pass
-│   ├── app-build.yml
 │   ├── bootstrap.yml
-│   ├── clean-repos.yml
-│   ├── create-user.yml
-│   ├── docker-install.yml
 │   ├── docker-run.yml
 │   ├── docker-stop.yml
 │   ├── group_vars
 │   │   └── immfly
 │   ├── inventory
 │   │   └── hosts
-│   ├── site-shutdown.yml
-│   ├── site.yml
-│   ├── templates
-│   │   └── default.conf.j2
-│   └── webserver-conf.yml
+│   ├── main.yml
+│   └── roles
+│       ├── apphost
+│       └── dockerhost
 ├── assets
 │   └── vm.xml
 ├── docker
@@ -125,8 +119,7 @@ Use one of them to get the VM IP address.  It's needed to run the main `service-
 │   │   ├── conf
 │   │   └── html
 │   └── docker-compose.yaml
-├── service-run.sh
-├── service-stop.sh
+├── main.sh
 └── utils
     ├── common.sh
     ├── env.sh
@@ -139,7 +132,7 @@ A password file `.vault.pass` is required to run the ansible playbooks, because 
 ## Environment Variables
 There are a few shell environment variables to configure the application and deployment
 - `TARGET_IP`: the IP address of the VM
-    >This is a required parameter.  Without it, the main shell script `service-run.sh` will not run
+    > This is a required parameter.  Without it, the main shell script `main.sh` will not run.  It can also be passed as a runtime parameter `-t`
 - `APP_USER`: The user who will run the containers.  The deployment will create it and assign it to the correct OS groups.  Default: `app-user`
 - `APP_PORT`: The port of the backend application.  Default `8000`
 - `WEB_PORT`: The port of the Nginx web frontend.  Default `80`
@@ -149,24 +142,54 @@ export TARGET_IP="192.168.122.190"
 ```
 
 ## Running the master script
-There's a master script `service-run.sh` that reads the environment variables and tries to guess the VM IP address.  
+There's a master script `main.sh` that reads the environment variables and tries to guess the VM IP address.  
 The script will fail(2) if:
 - Could not get the IP address
 - Could not make an SSH connection to the VM IP address
 
-Finally, it will run `ansible` using `docker`, and execute the necessary steps (`playbooks`) to deploy and run the Nginx web front-end and the Python FastAPI backend application.
-
-```sh
-bash service-run.sh
+### Parameters
+The `main.sh` script also accepts run-time parameters:
 ```
-> `sh service-run.sh` will fail because of the bash syntax used
+$ bash main.sh -h
+   Runs a clock web application, deploys it using Ansible,
+     and run it via Docker.
 
-## Stopping the containers
-There's a stop shell script called `service-stop.sh`.  It bootstraps ansible container again and connects to the VM to stop and remove the docker containers and docker networks.
-```sh
-bash service-stop.sh
+   Ref: "https://github.com/immfly/tech-test-infra"
+
+   Syntax: main.sh [-t|u|p|w|a|h]
+   Options:
+   -t     Target IP address.
+   -u     User to execute the application.  Default: app-user
+   -p     Application port.  Default: 8000
+   -w     Web port.  Default: 80
+   -a     Containers action.  Valid values: start|stop.
+            If 'start' is provided, just the containers plays will be executed.
+            If 'stop' is provided, the containers are going to stop.
+            If no action is provided, all the playbooks will run:
+              docker-install, app-install, web-configure, etc
+         Default: Run all playbooks.
 ```
-> `sh service-stop.sh` will fail because of the bash syntax used
+- All of these variables have the highest priority.  They overwrite exported shell variables
+- The IP address of the target VM can be specified with `-t <IP>`
+```sh
+bash main.sh -t 192.168.122.190
+```
+- The first time the command is run, it will run `ansible` using `docker`, and execute the necessary steps (`playbooks`) to deploy and run the Nginx web front-end and the Python FastAPI backend application.  It's sufficient to run it without parameters:
+```sh
+bash main.sh
+```
+    - It will try to guess the VM IP address.  If it can't, use the `-t` option or the exported `$TARGET_IP` variable.
+
+- There's a special parameter (`-a`) that can be used **after** the deployment to start the containers without reapplying the VM roles again.
+```sh
+bash main.sh -a start
+```
+
+### Stopping the containers
+There is an option to stop the containers.  It will bootstraps the ansible container and connect to the VM to stop and remove the docker containers and docker networks.
+```sh
+bash main.sh -a stop
+```
 
 ## Cleaning Up 💣
 - Stop the containers (previous section)

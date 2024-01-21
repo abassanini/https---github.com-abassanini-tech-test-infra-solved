@@ -1,0 +1,22 @@
+---
+- name: Copy Nginx conf directory
+  ansible.builtin.copy:
+    src: /docker/clock_web
+    dest: /tmp/web-project/
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0644'
+
+- name: Apply Conf Template
+  ansible.builtin.template:
+    src: /ansible/roles/apphost/templates/default.conf.j2
+    dest: /tmp/web-project/clock_web/conf/default.conf
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: "0644"
+
+- name: Pull Nginx image
+  community.docker.docker_image:
+    name: nginx
+    source: pull
+    state: present

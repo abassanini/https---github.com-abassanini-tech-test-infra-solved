@@ -5,7 +5,7 @@
 
 function validate_ssh_access {
     echo "Testing SSH access..."
-    if $(timeout 30 bash -c "cat < /dev/null > /dev/tcp/${1}/22"); then
+    if timeout 30 bash -c "cat < /dev/null > /dev/tcp/${1}/22"; then
         echo "SSH access OK"
     else
         echo "SSH access NOT OK.  Please check network access"

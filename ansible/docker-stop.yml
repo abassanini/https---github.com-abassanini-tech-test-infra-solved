@@ -1,29 +1,25 @@
 ---
-- name: Stop all docker app components
-  hosts: immfly-debian10
+- name: Create a block to start all components
+  become: true
+  become_user: "{{ app_user }}"
+  block:
+    - name: Stop and remove clock_web container
+      community.docker.docker_container:
+        name: clock_web
+        state: absent
 
-  tasks:
-    - name: Create a block to start all components
-      block:
-        - name: Stop and remove clock_web container
-          community.docker.docker_container:
-            name: clock_web
-            state: absent
-    
-        - name: Stop and remove clock_app container
-          community.docker.docker_container:
-            name: clock_app
-            state: absent
+    - name: Stop and remove clock_app container
+      community.docker.docker_container:
+        name: clock_app
+        state: absent
 
-        - name: "Delete docker network: clock_net"
-          ansible.builtin.docker_network:
-            name: clock_net
-            state: absent
-            force: yes
+    - name: "Delete docker network: clock_net"
+      community.docker.docker_network:
+        name: clock_net
+        state: absent
+        force: true
 
-      become: true
-      become_user: "{{ app_user }}"
-      rescue:
-        - name: Print errors
-          ansible.builtin.debug:
-            msg: 'Please check errors'
+  rescue:
+    - name: Print errors
+      ansible.builtin.debug:
+        msg: 'Please check errors'

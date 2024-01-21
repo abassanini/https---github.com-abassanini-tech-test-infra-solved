@@ -1,46 +1,40 @@
 ---
-- name: Bootstrap playbook
-  gather_facts: false
-  hosts: all
+- name: Add {{ inventory_hostname }} IP address to /etc/hosts
+  lineinfile:
+    dest: /etc/hosts
+    line: '{{ target_ip }} {{ inventory_hostname }}'
+    state: present
+    unsafe_writes: true
+  delegate_to: localhost
 
-  tasks:
-    - name: Add {{ inventory_hostname }} IP address to /etc/hosts
-      lineinfile:
-        dest: /etc/hosts
-        line: '{{ target_ip }} {{ inventory_hostname }}'
-        state: present
-        unsafe_writes: true
-      delegate_to: localhost
+- name: Create needed dirs
+  ansible.builtin.file:
+    path: ~/.ssh/
+    state: directory
+  delegate_to: localhost
 
-    - name: Create needed dirs
-      ansible.builtin.file:
-        path: ~/.ssh/
-        state: directory
-      delegate_to: localhost
-      
-    - name: Add {{ inventory_hostname }} key to known hosts
-      known_hosts:
-        path: ~/.ssh/known_hosts
-        name: '{{ inventory_hostname }}'
-        key: '{{ lookup(''pipe'', ''ssh-keyscan -T 10 '' + inventory_hostname ) }}'
-        state: present
-      delegate_to: localhost
-      
-    - name: Add {{ target_ip }} key to known hosts
-      known_hosts:
-        path: ~/.ssh/known_hosts
-        name: '{{ target_ip }}'
-        key: '{{ lookup(''pipe'', ''ssh-keyscan -T 10 '' + target_ip ) }}'
-        state: present
-      delegate_to: localhost
-      
-    - name: Copy deployment private key
-      copy:
-        content: '{{ rsa_key }}'
-        dest: ~/.ssh/id_rsa
-        owner: root
-        group: root
-        mode: 0600
-      delegate_to: localhost
-      no_log: true
-        
+- name: Add {{ inventory_hostname }} key to known hosts
+  known_hosts:
+    path: ~/.ssh/known_hosts
+    name: '{{ inventory_hostname }}'
+    key: '{{ lookup(''pipe'', ''ssh-keyscan -T 10 '' + inventory_hostname ) }}'
+    state: present
+  delegate_to: localhost
+
+- name: Add {{ target_ip }} key to known hosts
+  known_hosts:
+    path: ~/.ssh/known_hosts
+    name: '{{ target_ip }}'
+    key: '{{ lookup(''pipe'', ''ssh-keyscan -T 10 '' + target_ip ) }}'
+    state: present
+  delegate_to: localhost
+
+- name: Copy deployment private key
+  copy:
+    content: '{{ rsa_key }}'
+    dest: ~/.ssh/id_rsa
+    owner: root
+    group: root
+    mode: "0600"
+  delegate_to: localhost
+  no_log: true

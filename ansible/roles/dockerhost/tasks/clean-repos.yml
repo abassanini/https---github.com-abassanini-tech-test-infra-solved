@@ -1,0 +1,43 @@
+---
+# Clean old repos and add debian repo
+
+- name: Add global debian repository into sources list (main)
+  ansible.builtin.apt_repository:
+    repo: deb http://deb.debian.org/debian buster main contrib non-free
+    state: present
+    update_cache: false
+- name: Add global debian repository into sources list (main src)
+  ansible.builtin.apt_repository:
+    repo: deb-src http://deb.debian.org/debian buster main contrib non-free
+    state: present
+    update_cache: false
+- name: Add global debian repository into sources list (updates)
+  ansible.builtin.apt_repository:
+    repo: deb http://deb.debian.org/debian buster-updates main contrib non-free
+    state: present
+    update_cache: false
+- name: Add global debian repository into sources list (contrib)
+  ansible.builtin.apt_repository:
+    repo: deb-src http://deb.debian.org/debian buster-updates main contrib non-free
+    state: present
+    update_cache: false
+
+- name: Delete old ftp.caliu.cat (main)
+  ansible.builtin.apt_repository:
+    repo: deb http://ftp.caliu.cat/debian/ buster main non-free contrib
+    state: absent
+    update_cache: false
+- name: Delete old ftp.caliu.cat (main src)
+  ansible.builtin.apt_repository:
+    repo: deb-src http://ftp.caliu.cat/debian/ buster main non-free contrib
+    state: absent
+    update_cache: false
+- name: Delete old ftp.caliu.cat (contrib)
+  ansible.builtin.apt_repository:
+    repo: deb http://ftp.caliu.cat/debian/ buster-updates main contrib non-free
+    state: absent
+    update_cache: false
+- name: Delete old ftp.caliu.cat (contrib src)
+  ansible.builtin.apt_repository:
+    repo: deb-src http://ftp.caliu.cat/debian/ buster-updates main contrib non-free
+    state: absent

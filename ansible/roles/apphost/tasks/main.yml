@@ -1,0 +1,5 @@
+---
+- name: Build Docker App
+  ansible.builtin.include_tasks: app-build.yml
+- name: Configure Docker Web Server
+  ansible.builtin.include_tasks: webserver-conf.yml

@@ -1,0 +1,9 @@
+---
+- name: Create user
+  ansible.builtin.include_tasks: create-user.yml
+
+- name: Clean repos
+  ansible.builtin.include_tasks: clean-repos.yml
+
+- name: Install Docker
+  ansible.builtin.include_tasks: docker-install.yml

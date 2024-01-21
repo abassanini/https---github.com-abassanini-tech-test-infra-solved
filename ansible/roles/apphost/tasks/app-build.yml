@@ -1,0 +1,17 @@
+---
+- name: Copy app directory
+  ansible.builtin.copy:
+    src: /docker/clock_app
+    dest: /tmp/web-project/
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0644'
+
+- name: Build container image for app backend
+  community.docker.docker_image:
+    name: clock-app
+    tag: v1.0
+    build:
+      path: /tmp/web-project/clock_app
+    state: present
+    source: build

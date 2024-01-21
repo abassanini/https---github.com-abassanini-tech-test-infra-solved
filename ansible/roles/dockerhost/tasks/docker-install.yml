@@ -1,0 +1,49 @@
+---
+# Install Docker Packages
+
+- name: Install aptitude
+  ansible.builtin.apt:
+    name: aptitude
+    state: present
+    update_cache: true
+
+- name: Install system packages for Docker
+  ansible.builtin.apt:
+    pkg:
+      - ca-certificates
+      - curl
+      - gnupg
+    state: present
+    update_cache: true
+
+- name: Add Docker GPG apt Key
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/debian/gpg
+    state: present
+
+- name: Add Docker Repository
+  ansible.builtin.apt_repository:
+    repo: deb https://download.docker.com/linux/debian buster stable
+    state: present
+
+- name: Install docker-ce and related packages
+  ansible.builtin.apt:
+    pkg:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+      - python3-requests
+      - python3-docker
+    state: present
+    update_cache: true
+
+- name: Copy docker-compose binary
+  ansible.builtin.copy:
+    remote_src: true
+    src: /usr/libexec/docker/cli-plugins/docker-compose
+    dest: /usr/bin/
+    owner: root
+    group: root
+    mode: '0755'

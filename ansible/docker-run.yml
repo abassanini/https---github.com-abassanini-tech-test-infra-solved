@@ -1,88 +1,85 @@
 ---
-- name: Run all docker app components
-  gather_facts: false
-  hosts: immfly-debian10
+- name: Create a block to start all components
+  become: true
+  become_user: "{{ app_user }}"
+  block:
+    - name: "Create docker network: clock_net"
+      community.docker.docker_network:
+        name: clock_net
+        driver: bridge
 
-  tasks:
-    - name: Create a block to start all components
-      block:
-        - name: "Create docker network: clock_net"
-          ansible.builtin.docker_network:
-            name: clock_net
-            driver: bridge
-    
-        - name: Start clock_app container
-          community.docker.docker_container:
-            name: clock_app
-            image: clock-app:v1.0
-            detach: true
-            state: started
-            ports:
-            - "{{ app_port | int }}:8000"
-            env:
-              UVICORN_PORT: "8000"
-              UVICORN_HOST: "0.0.0.0"
-            networks:
-              - name: clock_net
-            ## Health Check usefull with docker-compose  
-            healthcheck:
-              test: ["python", "-c", "'import socket;exit(0) if 0 == socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect_ex(('127.0.0.1',8000)) else exit(2)'"]
-              interval: 5s
-              timeout: 10s
-          register: app_output
+    - name: Start clock_app container
+      community.docker.docker_container:
+        name: clock_app
+        image: clock-app:v1.0
+        detach: true
+        state: started
+        ports:
+          - "{{ apphost_app_port | int }}:8000"
+        env:
+          UVICORN_PORT: "8000"
+          UVICORN_HOST: "0.0.0.0"
+        networks:
+          - name: clock_net
+        ## Health Check usefull with docker-compose
+        healthcheck:
+          test: ["python", "-c", "'import socket;exit(0) if 0 == socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect_ex(('127.0.0.1',8000)) \
+                  else exit(2)'"]
+          interval: 5s
+          timeout: 10s
+      register: app_output
 
-        - name: Wait for clock_app to accept connections on port {{ app_port | int}}
-          wait_for:
-            host: "{{target_ip}}"
-            port: "{{ app_port | int }}"
-            state: started
-            connect_timeout: 1
-            timeout: 10
-          register: app_running
-          until: app_running is success
-          retries: 5
-          when: not app_output.failed
+    - name: Wait for clock_app to accept connections on port {{ apphost_app_port | int }}
+      ansible.builtin.wait_for:
+        host: "{{ target_ip }}"
+        port: "{{ apphost_app_port | int }}"
+        state: started
+        connect_timeout: 1
+        timeout: 10
+      register: app_running
+      until: app_running is success
+      retries: 5
+      when: not app_output.failed
 
-        - name: Start clock_web container
-          community.docker.docker_container:
-            name: clock_web
-            image: nginx
-            detach: true
-            state: started
-            ports:
-            - "0.0.0.0:{{ web_port | int }}:80"
-            volumes:
-              - /tmp/web-project/clock_web/html:/usr/share/nginx/html:ro
-              - /tmp/web-project/clock_web/conf/default.conf:/etc/nginx/conf.d/default.conf:ro
-            networks:
-              - name: clock_net
-          register: web_output
+    - name: Start clock_web container
+      community.docker.docker_container:
+        name: clock_web
+        image: nginx
+        detach: true
+        state: started
+        ports:
+          - "0.0.0.0:{{ apphost_web_port | int }}:80"
+        volumes:
+          - /tmp/web-project/clock_web/html:/usr/share/nginx/html:ro
+          - /tmp/web-project/clock_web/conf/default.conf:/etc/nginx/conf.d/default.conf:ro
+        networks:
+          - name: clock_net
+      register: web_output
 
-        - name: Wait for clock_web to accept connections on port {{ web_port | int }}
-          wait_for:
-            host: "{{target_ip}}"
-            port: "{{ web_port | int }}"
-            state: started
-            connect_timeout: 1
-            timeout: 10
-          register: web_running
-          until: web_running is success
-          retries: 5
-          when: not web_output.failed
+    - name: Wait for clock_web to accept connections on port {{ apphost_web_port | int }}
+      ansible.builtin.wait_for:
+        host: "{{ target_ip }}"
+        port: "{{ apphost_web_port | int }}"
+        state: started
+        connect_timeout: 1
+        timeout: 10
+      register: web_running
+      until: web_running is success
+      retries: 5
+      when: not web_output.failed
 
-      become: true
-      become_user: "{{ app_user }}"
-      rescue:
-        - name: Print errors
-          ansible.builtin.debug:
-            msg: 'Please check errors'
+  rescue:
+    - name: Print errors
+      ansible.builtin.debug:
+        msg: 'Please check errors'
 
-    - debug:
-        msg:
-          - "################## Deploy Finished ####################"
-          - "- clock_app: {{ app_output.container.State.Status }}"
-          - "- web_app: {{ web_output.container.State.Status }}"
-          - "#########################################################"
-          - "##  Service available at http://{{ target_ip }}:{{ web_port | int }}/  ##"
-          - "#########################################################"
-      when: web_running is success
+- name: Deployment message
+  ansible.builtin.debug:
+    msg:
+      - "################## Deploy Finished ####################"
+      - "- clock_app: {{ app_output.container.State.Status }}"
+      - "- web_app: {{ web_output.container.State.Status }}"
+      - "#########################################################"
+      - "##  Service available at http://{{ target_ip }}:{{ apphost_web_port | int }}/  ##"
+      - "#########################################################"
+  when: web_running is success

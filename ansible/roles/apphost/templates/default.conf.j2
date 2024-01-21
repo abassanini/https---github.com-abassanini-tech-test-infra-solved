@@ -11,7 +11,7 @@ server {
     }
 
     location /clock {
-       proxy_pass  http://clock_app:{{ app_port | int }}/clock;
+       proxy_pass  http://clock_app:{{ apphost_app_port | int }}/clock;
     }
 
     # redirect server error pages to the static page /50x.html

@@ -1,0 +1,24 @@
+---
+- name: Play to run docker service
+  hosts: all
+  gather_facts: false
+
+  roles:
+   - role: dockerhost
+   - role: apphost
+
+  pre_tasks:
+   - name: Bootstraping ansible docker image
+     ansible.builtin.import_tasks: bootstrap.yml
+     delegate_to: localhost
+     tags:
+      - always
+
+  tasks:
+   - name: Running docker containers
+     ansible.builtin.import_tasks: docker-run.yml
+     tags: start
+
+   - name: Stopping docker containers
+     ansible.builtin.import_tasks: docker-stop.yml
+     tags: never
